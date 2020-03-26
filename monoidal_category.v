@@ -4,6 +4,9 @@ Require Import monae_lib category.
 
 (*
 In this file:
+
+- product category (product of two categories)
+
 M1. monoidal cateogories
 M2. monoidal closed categories
 *)
@@ -18,10 +21,11 @@ Section def.
 Variable C D : category.
 Definition obj := (C * D)%type.
 Definition el (XY : obj) : Type := (El XY.1 + El XY.2)%type.
-(* naturality of f, seen as a transformation from 2 -> Cat *)
-Definition separated (XY UV : obj) (f : el XY -> el UV) : Prop :=
-  (forall x : El XY.1, exists u : El UV.1, f (inl x) = inl u) /\
-  (forall y : El XY.2, exists v : El UV.2, f (inr y) = inr v).
+(* naturality of f, seen as a transformation f : X ~~> Y,
+   where X, Y : 2 -> Cat *)
+Definition separated (X Y : obj) (f : el X -> el Y) : Prop :=
+  (forall x : El X.1, exists y : El Y.1, f (inl x) = inl y) /\
+  (forall x : El X.2, exists y : El Y.2, f (inr x) = inr y).
 
 Section homfstsnd.
 Let _homfst (X Y : obj) (f : el X -> el Y) : separated f -> El X.1 -> El Y.1.
@@ -101,4 +105,26 @@ refine (@Category.Mixin obj el inhom _ _).
 Defined.  
 End def.
 End ProductCategory.
-Canonical productCategory (C D : category) := Category.Pack (ProductCategory.mixin C D).
+Definition productCategory (C D : category) := Category.Pack (ProductCategory.mixin C D).
+
+(*
+Module MonoidalCategory.
+Section def.
+Record mixin_of (C : category) : Type := Mixin {
+ unit : C;                                             
+ prod : functor (productCategory C C) C;
+ unit_left : 
+ _ : forall c a b (f : {hom c,a}) (g : {hom c,b}),
+     f = [hom of (fst a b) \o (univ f g)];
+}.
+Record class_of (T : Type) : Type := Class {
+ base : Category.mixin_of T;
+ mixin : mixin_of (Category.Pack base);
+}.
+Structure t : Type := Pack { T : Type; class : class_of T }.
+End def.
+Module Exports.
+End Exports.
+End MonoidalCategory.
+Export MonoidalCategory.Exports.
+*)
