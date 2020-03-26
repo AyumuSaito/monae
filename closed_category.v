@@ -3,24 +3,30 @@ From mathcomp Require Import boolp.
 Require Import monae_lib category.
 
 (*
+In this file:
 1. categories with finite products
 2. categories with pullbacks
 2.99. universal arrow (for defining 3)
 3. finitely complete categories (categories with finite limits)
 4. categories with morphism comprehension
 5. cartesian closed categories
-a. monoidalc cateogories
-b. monoidal closed categories
 
 3 subsumes 1 and 2.
 5 = 1 + 4 + exponentiation axiom.
 
-b should subsume 5, but how do we define and relate them?
+
+In monoidal_category.v:
+M1. monoidal cateogories
+M2. monoidal closed categories
+
+M2 subsumes 5.
 *)
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
+
+
 Module CatWithFinProd.
 Section def.
 Record mixin_of (C : category) : Type := Mixin {
