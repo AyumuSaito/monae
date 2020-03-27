@@ -102,20 +102,19 @@ Definition mixin : Category.mixin_of (C * D).
 refine (@Category.Mixin obj el inhom _ _).
 - by move=> X; exists (idfun_separated X); rewrite homfst_idfun homsnd_idfun; split; apply id_in_hom.
 - by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite homfst_comp homsnd_comp; split; apply funcomp_in_hom.
-Defined.  
+Defined.
 End def.
 End ProductCategory.
 Definition productCategory (C D : category) := Category.Pack (ProductCategory.mixin C D).
 
-(*
 Module MonoidalCategory.
 Section def.
 Record mixin_of (C : category) : Type := Mixin {
- unit : C;                                             
+ unit : C;
  prod : functor (productCategory C C) C;
- unit_left : 
- _ : forall c a b (f : {hom c,a}) (g : {hom c,b}),
-     f = [hom of (fst a b) \o (univ f g)];
+ lambda : forall A : C, El (prod (unit, A)) -> El A ;
+(* _ : forall c a b (f : {hom c,a}) (g : {hom c,b}),
+     f = [hom of (fst a b) \o (unit f g)];*)
 }.
 Record class_of (T : Type) : Type := Class {
  base : Category.mixin_of T;
@@ -127,4 +126,3 @@ Module Exports.
 End Exports.
 End MonoidalCategory.
 Export MonoidalCategory.Exports.
-*)
