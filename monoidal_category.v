@@ -200,15 +200,49 @@ End WeirdProductCategory.
 *)
 
 
-(*
+Canonical productCategory.
+
+Section prodCat_pairhom.
+Variables A B : category.  
+Variables a1 a2 : A.
+Variables b1 b2 : B.
+Variables (f : {hom a1,a2}) (g : {hom b1,b2}).
+Let C := productCategory A B.
+Definition pairhom' (ab : El a1 + El b1) : El a2 + El b2 :=
+  match ab with
+  | inl a => inl (f a)
+  | inr b => inr (g b)
+  end.
+Lemma pairhom'_in_hom : @InHom C _ _ (pairhom' : El (a1,b1).1 + El (a1,b1).2 -> El (a2,b2).1 + El (a2,b2).2).
+rewrite /InHom /= /ProductCategory.inhom /=.
+Admitted.
+Definition pairhom : {hom (a1,b1),(a2,b2)} := Hom.Pack _ pairhom'_in_hom.
+End prodCat_pairhom.
+
+Module curry_left.
+Section def.
+Variables A B C : category.
+Variable F' : functor (productCategory A B) C.
+Variable a : A.
+Definition F_obj : B -> C := fun b => F' (a,b).
+Definition F_mor (b1 b2 : B) (f : {hom b1, b2}) : {hom F_obj b1, F_obj b2} :=
+  F' # pairhom (idfun_hom a) f.
+Program Definition mixin_of := @Functor.Mixin _ _ F_obj F_mor _ _.
+Obligation 1.
+Admitted.
+Obligation 2.
+Admitted.
+Definition F := Functor.Pack mixin_of.
+End def.
+End curry_left.
+
 Module MonoidalCategory.
 Section def.
 Record mixin_of (C : category) : Type := Mixin {
- unit : C;
+ I : C;
  prod : functor (productCategory C C) C;
- lambda : forall A : C, El (prod (unit, A)) -> El A ;
-(* _ : forall c a b (f : {hom c,a}) (g : {hom c,b}),
-     f = [hom of (fst a b) \o (unit f g)];*)
+ lambda : (curry_left.F prod I) ~> FId ;
+ rho : forall A : C, El (prod (A, I)) -> El A ;
 }.
 Record class_of (T : Type) : Type := Class {
  base : Category.mixin_of T;
@@ -220,4 +254,4 @@ Module Exports.
 End Exports.
 End MonoidalCategory.
 Export MonoidalCategory.Exports.
-*)
+
