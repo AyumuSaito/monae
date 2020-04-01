@@ -15,7 +15,6 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-
 (* A concrete category isomorphic to the product category of C and D *)
 (* sum version *)
 Module ProductCategory.
@@ -194,55 +193,97 @@ Definition mixin : Category.mixin_of (C * D).
 refine (@Category.Mixin obj el inhom _ _).
 - by move=> X; exists (idfun_separated X); rewrite homfst_idfun homsnd_idfun; split; apply id_in_hom.
 - by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite homfst_comp homsnd_comp; split; apply funcomp_in_hom.
-Defined.  
+Defined.
 End def.
 End WeirdProductCategory.
 *)
 
-
 Canonical productCategory.
 
 Section prodCat_pairhom.
-Variables A B : category.  
+Variables A B : category.
 Variables a1 a2 : A.
 Variables b1 b2 : B.
-Variables (f : {hom a1,a2}) (g : {hom b1,b2}).
+Variables (f : {hom a1, a2}) (g : {hom b1, b2}).
 Let C := productCategory A B.
 Definition pairhom' (ab : El a1 + El b1) : El a2 + El b2 :=
   match ab with
   | inl a => inl (f a)
   | inr b => inr (g b)
   end.
-Lemma pairhom'_in_hom : @InHom C _ _ (pairhom' : El (a1,b1).1 + El (a1,b1).2 -> El (a2,b2).1 + El (a2,b2).2).
+Lemma pairhom'_in_hom :
+  @InHom C _ _ (pairhom' : El (a1,b1).1 + El (a1,b1).2 ->
+                           El (a2,b2).1 + El (a2,b2).2).
+Proof.
 rewrite /InHom /= /ProductCategory.inhom /=.
-Admitted.
-Definition pairhom : {hom (a1,b1),(a2,b2)} := Hom.Pack _ pairhom'_in_hom.
+set s := ProductCategory.separated _.
+have [/= s1 s2] : s by split => /= x; [exists (f x) | exists (g x)].
+exists (conj s1 s2); split.
+- set h := ProductCategory.homfst _.
+  rewrite (_ : h = f); first exact: Hom.class.
+  by rewrite boolp.funeqE => ?; rewrite /h /=; case: cid => ? [].
+- set h := ProductCategory.homsnd _.
+  rewrite (_ : h = g); first exact: Hom.class.
+  by rewrite boolp.funeqE => ?; rewrite /h /=; case: cid => ? [].
+Qed.
+Definition pairhom : {hom (a1, b1), (a2, b2)} := Hom.Pack _ pairhom'_in_hom.
 End prodCat_pairhom.
 
 Module curry_left.
 Section def.
 Variables A B C : category.
-Variable F' : functor (productCategory A B) C.
 Variable a : A.
-Definition F_obj : B -> C := fun b => F' (a,b).
+Variable F' : functor (productCategory A B) C.
+Definition F_obj : B -> C := fun b => F' (a, b).
 Definition F_mor (b1 b2 : B) (f : {hom b1, b2}) : {hom F_obj b1, F_obj b2} :=
   F' # pairhom (idfun_hom a) f.
 Program Definition mixin_of := @Functor.Mixin _ _ F_obj F_mor _ _.
-Obligation 1.
-Admitted.
-Obligation 2.
-Admitted.
+Next Obligation.
+move=> D; rewrite /F_mor; set h := pairhom _ _.
+rewrite (_ : h = [hom of idfun]) ?functor_id_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
+Next Obligation.
+move=> b b0 b1 g h; rewrite /F_mor; set i := pairhom _ _.
+rewrite (_ : i = [hom of [fun of (pairhom (idfun_hom a) g)] \o
+                         [fun of (pairhom (idfun_hom a) h)]]) ?functor_o_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
 Definition F := Functor.Pack mixin_of.
 End def.
 End curry_left.
+
+Module curry_right.
+Section def.
+Variables A B C : category.
+Variable F' : functor (productCategory A B) C.
+Variable b : B.
+Definition F_obj : A -> C := fun a => F' (a, b).
+Definition F_mor (a1 a2 : A) (f : {hom a1, a2}) : {hom F_obj a1, F_obj a2} :=
+  F' # pairhom f (idfun_hom b).
+Program Definition mixin_of := @Functor.Mixin _ _ F_obj F_mor _ _.
+Next Obligation.
+move=> D; rewrite /F_mor; set h := pairhom _ _.
+rewrite (_ : h = [hom of idfun]) ?functor_id_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
+Next Obligation.
+move=> a a0 a1 g h; rewrite /F_mor; set i := pairhom _ _.
+rewrite (_ : i = [hom of [fun of (pairhom g (idfun_hom b))] \o
+                         [fun of (pairhom h (idfun_hom b))]]) ?functor_o_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
+Definition F := Functor.Pack mixin_of.
+End def.
+End curry_right.
 
 Module MonoidalCategory.
 Section def.
 Record mixin_of (C : category) : Type := Mixin {
  I : C;
  prod : functor (productCategory C C) C;
- lambda : (curry_left.F prod I) ~> FId ;
- rho : forall A : C, El (prod (A, I)) -> El A ;
+ lambda : curry_left.F I prod ~> FId ;
+ rho : curry_right.F prod I ~> FId
 }.
 Record class_of (T : Type) : Type := Class {
  base : Category.mixin_of T;
@@ -254,4 +295,3 @@ Module Exports.
 End Exports.
 End MonoidalCategory.
 Export MonoidalCategory.Exports.
-
