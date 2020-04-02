@@ -232,8 +232,8 @@ End prodCat_pairhom.
 Module curry_left.
 Section def.
 Variables A B C : category.
-Variable a : A.
 Variable F' : functor (productCategory A B) C.
+Variable a : A.
 Definition F_obj : B -> C := fun b => F' (a, b).
 Definition F_mor (b1 b2 : B) (f : {hom b1, b2}) : {hom F_obj b1, F_obj b2} :=
   F' # pairhom (idfun_hom a) f.
@@ -280,10 +280,12 @@ End curry_right.
 Module MonoidalCategory.
 Section def.
 Record mixin_of (C : category) : Type := Mixin {
- I : C;
- prod : functor (productCategory C C) C;
- lambda : curry_left.F I prod ~> FId ;
- rho : curry_right.F prod I ~> FId
+  I : C;
+  prod : functor (productCategory C C) C;
+  lambda' : forall x : C, El (prod (I, x)) -> El x ;
+  lambda : curry_left.F prod I ~> FId ;
+  rho : curry_right.F prod I ~> FId ;
+  alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;
 }.
 Record class_of (T : Type) : Type := Class {
  base : Category.mixin_of T;
