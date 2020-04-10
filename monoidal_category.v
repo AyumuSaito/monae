@@ -277,16 +277,124 @@ Definition F := Functor.Pack mixin_of.
 End def.
 End papply_right.
 
+Module alpha_left.
+Section alpha_left.
+Variables A B C D : category.
+Variable F' : functor (productCategory (productCategory A B) C) D.
+Variables (a : A) (b : B).
+Definition acto : C -> D := papply_left.F F' (a, b).
+Definition actm (c1 c2 : C) (f : {hom c1, c2}) : {hom acto c1, acto c2} :=
+  F' # pairhom (idfun_hom (a, b)) f.
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
+Next Obligation.
+move=> c0; rewrite /actm; set h := pairhom _ _.
+rewrite (_ : h = [hom of idfun]) ?functor_id_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
+Next Obligation.
+move=> c c0 c1 g h; rewrite /actm; set i := pairhom _ _.
+rewrite (_ : i = [hom of [fun of (pairhom (idfun_hom (a, b)) g)] \o
+                         [fun of (pairhom (idfun_hom (a, b)) h)]]) ?functor_o_hom //.
+by apply/hom_ext => /=; rewrite boolp.funeqE; case.
+Qed.
+Definition F : functor C D := Functor.Pack mixin_of.
+End alpha_left.
+End alpha_left.
+
+Module alpha_right.
+Section alpha_right.
+Variables A B C D : category.
+Variable F' : functor (productCategory A (productCategory B C)) D.
+Variables (a : A) (b : B).
+Definition acto : C -> D := papply_left.F (papply_left.F F' a) b.
+Definition actm (c1 c2 : C) (f : {hom c1, c2}) : {hom acto c1, acto c2}.
+Admitted.
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
+Next Obligation.
+Admitted.
+Next Obligation.
+Admitted.
+Definition F : functor C D := Functor.Pack mixin_of.
+End alpha_right.
+End alpha_right.
+
+Module prod_left.
+Section prod_left.
+Variable C : category.
+Variable F' : functor (productCategory C C) C.
+Let CCC := productCategory (productCategory C C) C.
+Definition acto : CCC -> C := fun ccc => F' (F' ccc.1, ccc.2).
+Definition actm (c1 c2 : CCC) (f : {hom c1, c2}) : {hom acto c1, acto c2}.
+Admitted.
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
+Next Obligation.
+Admitted.
+Next Obligation.
+Admitted.
+Definition F : functor CCC C := Functor.Pack mixin_of.
+End prod_left.
+End prod_left.
+
+Section prodCat_fsthom.
+Variables A B : category.
+Variables a1 a2 : A.
+Let C := productCategory A B.
+Variables c1 c2 : C.
+Variables (f : {hom c1, c2}).
+Definition fsthom : {hom a1, a2}. Admitted.
+End prodCat_fsthom.
+
+Section prodCat_sndhom.
+Variables A B : category.
+Variables b1 b2 : B.
+Let C := productCategory A B.
+Variables c1 c2 : C.
+Variables (f : {hom c1, c2}).
+Definition sndhom : {hom b1, b2}. Admitted.
+End prodCat_sndhom.
+
+Module prod_right.
+Section prod_right.
+Variable C : category.
+Variable F' : functor (productCategory C C) C.
+Let CCC := productCategory C (productCategory C C).
+Definition acto : CCC -> C := fun ccc => F' (ccc.1, F' ccc.2).
+Definition actm (c1 c2 : CCC) (f : {hom c1, c2}) : {hom acto c1, acto c2} :=
+  F' # (pairhom (fsthom _ _ f) (F' # (sndhom _ _ f))).
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
+Next Obligation.
+Admitted.
+Next Obligation.
+Admitted.
+Definition F : functor (productCategory C (productCategory C C)) C.
+Admitted.
+End prod_right.
+End prod_right.
+
 Module MonoidalCategory.
 Section def.
+Import homcomp_notation.
 Record mixin_of (C : category) : Type := Mixin {
   I : C;
   prod : functor (productCategory C C) C;
-  lambda' : forall x : C, El (prod (I, x)) -> El x ;
   lambda : papply_left.F prod I ~> FId ;
   rho : papply_right.F prod I ~> FId ;
-  alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;
+(*  alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;*)
+  alpha : forall a b, alpha_left.F (prod_left.F prod) a b ~> alpha_right.F (prod_right.F prod) a b ;
 }.
+Section scratch_pad.
+Variable C : category.
+Variable m : mixin_of C.
+Variable x : C.
+Variable y : C.
+Check (prod m # pairhom (rho m x) (NId FId y)).
+Definition h : {hom alpha_right.F (prod_right.F (prod m)) x (I m) y, prod m (FId x, papply_left.F (prod m) (I m) y)}.
+have f : El (alpha_right.F (prod_right.F (prod m)) x (I m) y) -> El (prod m (FId x, papply_left.F (prod m) (I m) y)).
+  rewrite /alpha_right.F /=.
+  rewrite /alpha_right.acto /=.
+  rewrite /papply_left.F_obj /=.
+Abort.
+End scratch_pad.
 Record class_of (T : Type) : Type := Class {
  base : Category.mixin_of T;
  mixin : mixin_of (Category.Pack base);
