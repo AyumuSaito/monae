@@ -26,37 +26,37 @@ Definition separated (X Y : obj) (f : el X -> el Y) : Prop :=
   (forall x : El X.1, exists y : El Y.1, f (inl x) = inl y) /\
   (forall x : El X.2, exists y : El Y.2, f (inr x) = inr y).
 
-Section homfstsnd.
-Let _homfst (X Y : obj) (f : el X -> el Y) : separated f -> El X.1 -> El Y.1.
+Section sepfstsnd.
+Let _sepfst (X Y : obj) (f : el X -> el Y) : separated f -> El X.1 -> El Y.1.
 case=> H _ x.
 move/cid: (H x)=> [] y _.
 exact y.
 Defined.
-Definition homfst := Eval hnf in _homfst.
-Let _homsnd (X Y : obj) (f : el X -> el Y) : separated f -> El X.2 -> El Y.2.
+Definition sepfst := Eval hnf in _sepfst.
+Let _sepsnd (X Y : obj) (f : el X -> el Y) : separated f -> El X.2 -> El Y.2.
 case=> _ H x.
 move/cid: (H x)=> [] y _.
 exact y.
 Defined.
-Definition homsnd := Eval hnf in _homsnd.
-End homfstsnd.
+Definition sepsnd := Eval hnf in _sepsnd.
+End sepfstsnd.
 
-Lemma homfstK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.1) :
-  inl (homfst Hf x) = f (inl x).
+Lemma sepfstK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.1) :
+  inl (sepfst Hf x) = f (inl x).
 Proof.
 move: f Hf x.
 case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
 by case: (cid (Hf1 x))=> y ->.
 Qed.
-Lemma homsndK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.2) :
-  inr (homsnd Hf x) = f (inr x).
+Lemma sepsndK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.2) :
+  inr (sepsnd Hf x) = f (inr x).
 Proof.
 move: f Hf x.
 case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
 by case: (cid (Hf2 x))=> y ->.
 Qed.
 Definition inhom (A B : obj) (f : el A -> el B) : Prop :=
-  exists H : separated f, InHom (homfst H) /\ InHom (homsnd H).
+  exists H : separated f, InHom (sepfst H) /\ InHom (sepsnd H).
 Lemma idfun_separated (X : obj) : @separated X X idfun.
 Proof. by split; move=> x; exists x. Qed.
 Lemma comp_separated (X Y Z : obj) (f :el X -> el Y) (g : el Y -> el Z) :
@@ -67,40 +67,40 @@ case: X=> X1 X2; case: Y=> Y1 Y2; case: Z=> Z1 Z2 f g [] /= Hf1 Hf2 [] /= Hg1 Hg
 - by move=> x; case/cid: (Hf1 x)=> y /= ->; case/cid: (Hg1 y)=> z /= ->; exists z.
 - by move=> x; case/cid: (Hf2 x)=> y /= ->; case/cid: (Hg2 y)=> z /= ->; exists z.
 Qed.
-Lemma homfst_idfun X : homfst (idfun_separated X) = idfun.
+Lemma sepfst_idfun X : sepfst (idfun_separated X) = idfun.
 Proof.
 apply funext=> x /=.
-suff: inl (B:=El X.2) (homfst (idfun_separated X) x) = inl x by move=> [=].
-by rewrite homfstK.
+suff: inl (B:=El X.2) (sepfst (idfun_separated X) x) = inl x by move=> [=].
+by rewrite sepfstK.
 Qed.
-Lemma homsnd_idfun X : homsnd (idfun_separated X) = idfun.
+Lemma sepsnd_idfun X : sepsnd (idfun_separated X) = idfun.
 Proof.
 apply funext=> x /=.
-suff: inr (A:=El X.1) (homsnd (idfun_separated X) x) = inr x by move=> [=].
-by rewrite homsndK.
+suff: inr (A:=El X.1) (sepsnd (idfun_separated X) x) = inr x by move=> [=].
+by rewrite sepsndK.
 Qed.
-Lemma homfst_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
+Lemma sepfst_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
       (Hf : separated f) (Hg : separated g) :
-  homfst (comp_separated Hf Hg) = homfst Hg \o homfst Hf.
+  sepfst (comp_separated Hf Hg) = sepfst Hg \o sepfst Hf.
 Proof.
 apply funext=> x /=.
-suff: inl (B:=El Z.2) (homfst (comp_separated Hf Hg) x) = inl (homfst Hg (homfst Hf x))
+suff: inl (B:=El Z.2) (sepfst (comp_separated Hf Hg) x) = inl (sepfst Hg (sepfst Hf x))
   by move => [=].
-by rewrite 3!homfstK.
+by rewrite 3!sepfstK.
 Qed.
-Lemma homsnd_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
+Lemma sepsnd_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
       (Hf : separated f) (Hg : separated g) :
-  homsnd (comp_separated Hf Hg) = homsnd Hg \o homsnd Hf.
+  sepsnd (comp_separated Hf Hg) = sepsnd Hg \o sepsnd Hf.
 Proof.
 apply funext=> x /=.
-suff: inr (A:=El Z.1) (homsnd (comp_separated Hf Hg) x) = inr (homsnd Hg (homsnd Hf x))
+suff: inr (A:=El Z.1) (sepsnd (comp_separated Hf Hg) x) = inr (sepsnd Hg (sepsnd Hf x))
   by move => [=].
-by rewrite 3!homsndK.
+by rewrite 3!sepsndK.
 Qed.
 Definition mixin : Category.mixin_of (C * D).
 refine (@Category.Mixin obj el inhom _ _).
-- by move=> X; exists (idfun_separated X); rewrite homfst_idfun homsnd_idfun; split; apply id_in_hom.
-- by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite homfst_comp homsnd_comp; split; apply funcomp_in_hom.
+- by move=> X; exists (idfun_separated X); rewrite sepfst_idfun sepsnd_idfun; split; apply id_in_hom.
+- by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite sepfst_comp sepsnd_comp; split; apply funcomp_in_hom.
 Defined.
 End def.
 End ProductCategory.
@@ -143,10 +143,10 @@ rewrite /InHom /= /ProductCategory.inhom /=.
 set s := ProductCategory.separated _.
 have [/= s1 s2] : s by split => /= x; [exists (f x) | exists (g x)].
 exists (conj s1 s2); split.
-- set h := ProductCategory.homfst _.
+- set h := ProductCategory.sepfst _.
   rewrite (_ : h = f); first exact: Hom.class.
   by rewrite boolp.funeqE => ?; rewrite /h /=; case: cid => ? [].
-- set h := ProductCategory.homsnd _.
+- set h := ProductCategory.sepsnd _.
   rewrite (_ : h = g); first exact: Hom.class.
   by rewrite boolp.funeqE => ?; rewrite /h /=; case: cid => ? [].
 Qed.
@@ -215,7 +215,11 @@ Local Notation B := (B1 * B2)%type.
 Definition acto (x : A) : B := pair (F1 x.1) (F2 x.2).
 Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
   pairhom (F1 # homfst f) (F2 # homsnd f).
-
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
+Next Obligation.
+Admitted.
+Next Obligation.
+Admitted.
 End def.
 End ProductFunctor.
 
