@@ -229,7 +229,7 @@ Qed.
 Definition pairhom : {hom (a1, b1), (a2, b2)} := Hom.Pack _ pairhom'_in_hom.
 End prodCat_pairhom.
 
-Module curry_left.
+Module papply_left.
 Section def.
 Variables A B C : category.
 Variable F' : functor (productCategory A B) C.
