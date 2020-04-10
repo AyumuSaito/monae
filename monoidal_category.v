@@ -281,24 +281,6 @@ Definition F : functor CCC C := Functor.Pack mixin_of.
 End prod_left.
 End prod_left.
 
-Section prodCat_fsthom.
-Variables A B : category.
-Variables a1 a2 : A.
-Let C := productCategory A B.
-Variables c1 c2 : C.
-Variables (f : {hom c1, c2}).
-Definition fsthom : {hom a1, a2}. Admitted.
-End prodCat_fsthom.
-
-Section prodCat_sndhom.
-Variables A B : category.
-Variables b1 b2 : B.
-Let C := productCategory A B.
-Variables c1 c2 : C.
-Variables (f : {hom c1, c2}).
-Definition sndhom : {hom b1, b2}. Admitted.
-End prodCat_sndhom.
-
 Module prod_right.
 Section prod_right.
 Variable C : category.
@@ -306,7 +288,7 @@ Variable F' : functor (productCategory C C) C.
 Let CCC := productCategory C (productCategory C C).
 Definition acto : CCC -> C := fun ccc => F' (ccc.1, F' ccc.2).
 Definition actm (c1 c2 : CCC) (f : {hom c1, c2}) : {hom acto c1, acto c2} :=
-  F' # (pairhom (fsthom _ _ f) (F' # (sndhom _ _ f))).
+  F' # (pairhom (homfst f) (F' # (homsnd f))).
 Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
 Next Obligation.
 Admitted.
