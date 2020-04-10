@@ -251,9 +251,9 @@ by apply/hom_ext => /=; rewrite boolp.funeqE; case.
 Qed.
 Definition F := Functor.Pack mixin_of.
 End def.
-End curry_left.
+End papply_left.
 
-Module curry_right.
+Module papply_right.
 Section def.
 Variables A B C : category.
 Variable F' : functor (productCategory A B) C.
@@ -275,7 +275,7 @@ by apply/hom_ext => /=; rewrite boolp.funeqE; case.
 Qed.
 Definition F := Functor.Pack mixin_of.
 End def.
-End curry_right.
+End papply_right.
 
 Module MonoidalCategory.
 Section def.
@@ -283,8 +283,8 @@ Record mixin_of (C : category) : Type := Mixin {
   I : C;
   prod : functor (productCategory C C) C;
   lambda' : forall x : C, El (prod (I, x)) -> El x ;
-  lambda : curry_left.F prod I ~> FId ;
-  rho : curry_right.F prod I ~> FId ;
+  lambda : papply_left.F prod I ~> FId ;
+  rho : papply_right.F prod I ~> FId ;
   alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;
 }.
 Record class_of (T : Type) : Type := Class {
