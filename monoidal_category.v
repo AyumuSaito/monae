@@ -106,99 +106,23 @@ End def.
 End ProductCategory.
 Definition productCategory (C D : category) := Category.Pack (ProductCategory.mixin C D).
 
-(*
-(* A similar construction.
-   Related to another tensor product in Cat, like the funny tensor? *)
-Module WeirdProductCategory.
-Section def.
-Variable C D : category.
-Definition obj := (C * D)%type.
-Definition el (X : obj) : Type := (El X.1 * El X.2)%type.
-Definition independent (X Y : obj) (f : el X -> el Y) : Prop :=
-  (forall (x : El X.1) (y y' : El X.2), fst (f (x,y)) = fst (f (x,y'))) /\
-  (forall (x x': El X.1) (y : El X.2), snd (f (x,y)) = snd (f (x',y))).
+Canonical productCategory.
 
-Section homfstsnd.
-Let _homfst (X Y : obj) (f : el X -> el Y) : independent f -> El X.1 -> El Y.1.
-case=> H _ x.
-move/cid: (H x)=> [] y _.
-exact y.
+Section prodcat_homfstsnd.
+Variables A B : category.
+Let _homfst (x y : A * B) (f : {hom x,y}) : {hom x.1, y.1}.
+case:f => f.
+case/cid=> sf [] Hf _.
+exact: (HomPack Hf).
 Defined.
 Definition homfst := Eval hnf in _homfst.
-Let _homsnd (X Y : obj) (f : el X -> el Y) : separated f -> El X.2 -> El Y.2.
-case=> _ H x.
-move/cid: (H x)=> [] y _.
-exact y.
+Let _homsnd (x y : A * B) (f : {hom x,y}) : {hom x.2, y.2}.
+case:f => f.
+case/cid=> sf [] _ Hf.
+exact: (HomPack Hf).
 Defined.
 Definition homsnd := Eval hnf in _homsnd.
-End homfstsnd.
-
-Lemma homfstK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.1) :
-  inl (homfst Hf x) = f (inl x).
-Proof.
-move: f Hf x.
-case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
-by case: (cid (Hf1 x))=> y ->.
-Qed.
-Lemma homsndK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.2) :
-  inr (homsnd Hf x) = f (inr x).
-Proof.
-move: f Hf x.
-case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
-by case: (cid (Hf2 x))=> y ->.
-Qed.
-Definition inhom (A B : obj) (f : el A -> el B) : Prop :=
-  exists H : separated f, InHom (homfst H) /\ InHom (homsnd H).
-Lemma idfun_separated (X : obj) : @separated X X idfun.
-Proof. by split; move=> x; exists x. Qed.
-Lemma comp_separated (X Y Z : obj) (f :el X -> el Y) (g : el Y -> el Z) :
-  separated f -> separated g -> separated (g \o f).
-Proof.
-move: f g.
-case: X=> X1 X2; case: Y=> Y1 Y2; case: Z=> Z1 Z2 f g [] /= Hf1 Hf2 [] /= Hg1 Hg2; split.
-- by move=> x; case/cid: (Hf1 x)=> y /= ->; case/cid: (Hg1 y)=> z /= ->; exists z.
-- by move=> x; case/cid: (Hf2 x)=> y /= ->; case/cid: (Hg2 y)=> z /= ->; exists z.
-Qed.
-Lemma homfst_idfun X : homfst (idfun_separated X) = idfun.
-Proof.
-apply funext=> x /=.
-suff: inl (B:=El X.2) (homfst (idfun_separated X) x) = inl x by move=> [=].
-by rewrite homfstK.
-Qed.
-Lemma homsnd_idfun X : homsnd (idfun_separated X) = idfun.
-Proof.
-apply funext=> x /=.
-suff: inr (A:=El X.1) (homsnd (idfun_separated X) x) = inr x by move=> [=].
-by rewrite homsndK.
-Qed.
-Lemma homfst_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
-      (Hf : separated f) (Hg : separated g) :
-  homfst (comp_separated Hf Hg) = homfst Hg \o homfst Hf.
-Proof.
-apply funext=> x /=.
-suff: inl (B:=El Z.2) (homfst (comp_separated Hf Hg) x) = inl (homfst Hg (homfst Hf x))
-  by move => [=].
-by rewrite 3!homfstK.
-Qed.
-Lemma homsnd_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
-      (Hf : separated f) (Hg : separated g) :
-  homsnd (comp_separated Hf Hg) = homsnd Hg \o homsnd Hf.
-Proof.
-apply funext=> x /=.
-suff: inr (A:=El Z.1) (homsnd (comp_separated Hf Hg) x) = inr (homsnd Hg (homsnd Hf x))
-  by move => [=].
-by rewrite 3!homsndK.
-Qed.
-Definition mixin : Category.mixin_of (C * D).
-refine (@Category.Mixin obj el inhom _ _).
-- by move=> X; exists (idfun_separated X); rewrite homfst_idfun homsnd_idfun; split; apply id_in_hom.
-- by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite homfst_comp homsnd_comp; split; apply funcomp_in_hom.
-Defined.
-End def.
-End WeirdProductCategory.
-*)
-
-Canonical productCategory.
+End prodcat_homfstsnd.
 
 Section prodCat_pairhom.
 Variables A B : category.
@@ -276,6 +200,25 @@ Qed.
 Definition F := Functor.Pack mixin_of.
 End def.
 End papply_right.
+
+Module ProductFunctor.
+(* This notion does not have a proper name in the literature.
+   "Product functor" is just a tentative naming,
+   which unfortunately suffers a collision to another notion:
+   the functor which maps two objects a, b \in C to their product a*b \in C 
+*)
+Section def.
+Variables A1 B1 A2 B2 : category.
+Variables (F1 : functor A1 B1) (F2 : functor A2 B2).
+Local Notation A := (A1 * A2)%type.
+Local Notation B := (B1 * B2)%type.
+Definition acto (x : A) : B := pair (F1 x.1) (F2 x.2).
+Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
+  pairhom (F1 # ProductCategory.homfst f) (F2 # ProductCategory.homsnd f).
+  F # 
+
+End def.
+End ProductFunctor.
 
 Module alpha_left.
 Section alpha_left.
@@ -405,3 +348,129 @@ Module Exports.
 End Exports.
 End MonoidalCategory.
 Export MonoidalCategory.Exports.
+
+
+(* Attic *)
+(*
+Module BifunctorLaws.
+Section def.
+Variable (A B C : category).
+Variable (M : A * B -> C) (f : forall A B, {hom A,B} -> {hom M A, M B}).
+Definition id := forall A, f [hom of idfun] = [hom of idfun] :> {hom M A,M A}.
+Definition comp := forall A B C (g : {hom B,C}) (h : {hom A,B}),
+  f [hom of g \o h] = [hom of f g \o f h] :> {hom M A,M C}.
+End def.
+End FunctorLaws.
+
+Module Bifunctor.
+Record mixin_of (C D : category) (m : C -> D) : Type := Mixin {
+  f : forall A B, {hom A, B} -> {hom m A, m B} ;
+  _ : FunctorLaws.id f ;
+  _ : FunctorLaws.comp f }.
+Structure t (C D : category) : Type := Pack { m : C -> D ; class : mixin_of m }.
+Module Exports.
+Section exports.
+Variables (C D : category).
+Definition Fun (F : t C D) : forall A B, {hom A, B} -> {hom m F A, m F B} :=
+  let: Pack _ (Mixin f _ _) := F return forall A B, {hom A, B} -> {hom m F A, m F B} in f.
+Arguments Fun _ [A] [B] : simpl never.
+End exports.
+Notation functor := t.
+Coercion m : functor >-> Funclass.
+End Exports.
+End Functor.
+Export Functor.Exports.
+Notation "F # f" := (Fun F f).
+ *)
+
+(*
+(* A similar construction.
+   Related to another tensor product in Cat, like the funny tensor? *)
+Module WeirdProductCategory.
+Section def.
+Variable C D : category.
+Definition obj := (C * D)%type.
+Definition el (X : obj) : Type := (El X.1 * El X.2)%type.
+Definition independent (X Y : obj) (f : el X -> el Y) : Prop :=
+  (forall (x : El X.1) (y y' : El X.2), fst (f (x,y)) = fst (f (x,y'))) /\
+  (forall (x x': El X.1) (y : El X.2), snd (f (x,y)) = snd (f (x',y))).
+
+Section homfstsnd.
+Let _homfst (X Y : obj) (f : el X -> el Y) : independent f -> El X.1 -> El Y.1.
+case=> H _ x.
+move/cid: (H x)=> [] y _.
+exact y.
+Defined.
+Definition homfst := Eval hnf in _homfst.
+Let _homsnd (X Y : obj) (f : el X -> el Y) : separated f -> El X.2 -> El Y.2.
+case=> _ H x.
+move/cid: (H x)=> [] y _.
+exact y.
+Defined.
+Definition homsnd := Eval hnf in _homsnd.
+End homfstsnd.
+
+Lemma homfstK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.1) :
+  inl (homfst Hf x) = f (inl x).
+Proof.
+move: f Hf x.
+case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
+by case: (cid (Hf1 x))=> y ->.
+Qed.
+Lemma homsndK X Y (f : el X -> el Y) (Hf : separated f) (x : El X.2) :
+  inr (homsnd Hf x) = f (inr x).
+Proof.
+move: f Hf x.
+case: X=> X1 X2; case:Y=> Y1 Y2 /= f [] /= Hf1 Hf2 x.
+by case: (cid (Hf2 x))=> y ->.
+Qed.
+Definition inhom (A B : obj) (f : el A -> el B) : Prop :=
+  exists H : separated f, InHom (homfst H) /\ InHom (homsnd H).
+Lemma idfun_separated (X : obj) : @separated X X idfun.
+Proof. by split; move=> x; exists x. Qed.
+Lemma comp_separated (X Y Z : obj) (f :el X -> el Y) (g : el Y -> el Z) :
+  separated f -> separated g -> separated (g \o f).
+Proof.
+move: f g.
+case: X=> X1 X2; case: Y=> Y1 Y2; case: Z=> Z1 Z2 f g [] /= Hf1 Hf2 [] /= Hg1 Hg2; split.
+- by move=> x; case/cid: (Hf1 x)=> y /= ->; case/cid: (Hg1 y)=> z /= ->; exists z.
+- by move=> x; case/cid: (Hf2 x)=> y /= ->; case/cid: (Hg2 y)=> z /= ->; exists z.
+Qed.
+Lemma homfst_idfun X : homfst (idfun_separated X) = idfun.
+Proof.
+apply funext=> x /=.
+suff: inl (B:=El X.2) (homfst (idfun_separated X) x) = inl x by move=> [=].
+by rewrite homfstK.
+Qed.
+Lemma homsnd_idfun X : homsnd (idfun_separated X) = idfun.
+Proof.
+apply funext=> x /=.
+suff: inr (A:=El X.1) (homsnd (idfun_separated X) x) = inr x by move=> [=].
+by rewrite homsndK.
+Qed.
+Lemma homfst_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
+      (Hf : separated f) (Hg : separated g) :
+  homfst (comp_separated Hf Hg) = homfst Hg \o homfst Hf.
+Proof.
+apply funext=> x /=.
+suff: inl (B:=El Z.2) (homfst (comp_separated Hf Hg) x) = inl (homfst Hg (homfst Hf x))
+  by move => [=].
+by rewrite 3!homfstK.
+Qed.
+Lemma homsnd_comp X Y Z (f : el X -> el Y) (g : el Y -> el Z)
+      (Hf : separated f) (Hg : separated g) :
+  homsnd (comp_separated Hf Hg) = homsnd Hg \o homsnd Hf.
+Proof.
+apply funext=> x /=.
+suff: inr (A:=El Z.1) (homsnd (comp_separated Hf Hg) x) = inr (homsnd Hg (homsnd Hf x))
+  by move => [=].
+by rewrite 3!homsndK.
+Qed.
+Definition mixin : Category.mixin_of (C * D).
+refine (@Category.Mixin obj el inhom _ _).
+- by move=> X; exists (idfun_separated X); rewrite homfst_idfun homsnd_idfun; split; apply id_in_hom.
+- by move=> X Y Z f g [] sf [] homfl homfr [] sg [] homgl homgr ; exists (comp_separated sf sg); rewrite homfst_comp homsnd_comp; split; apply funcomp_in_hom.
+Defined.
+End def.
+End WeirdProductCategory.
+*)
