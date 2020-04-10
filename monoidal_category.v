@@ -375,6 +375,25 @@ Admitted.
 End prod_right.
 End prod_right.
 
+Module ProductCategoryAssoc.
+Section def.
+Variables A B C : category.
+Definition acto (x : A * (B * C)) : A * B * C :=  match x with (a,(b,c)) => ((a,b),c) end.
+Definition actm (x y : A * (B * C)) : {hom x,y} -> {hom acto x, acto y} :=
+match x with (xa,(xb,xc)) => match y with (ya,(yb,yc)) => fun f => pairhom (pairhom (homfst f) (homfst (homsnd f))) (homsnd (homsnd f)) end end.
+Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _ .
+Next Obligation.
+case=> a [] b c.
+by rewrite /actm 2!homsnd_idfun 2!homfst_idfun 2!pairhom_idfun.
+Qed.
+Next Obligation.
+case=> xa [] xb xc [] ya [] yb yc [] za [] zb zc g h.
+by rewrite /actm !homsnd_comp !homfst_comp !pairhom_comp.
+Qed.
+Definition F := Functor.Pack mixin_of.
+End def.
+End ProductCategoryAssoc.
+
 Module MonoidalCategory.
 Section def.
 Import homcomp_notation.
@@ -385,7 +404,7 @@ Record mixin_of (C : category) : Type := Mixin {
   rho : papply_right.F prod I ~> FId ;
 (*  alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;*)
   (*alpha : forall a b, alpha_left.F (prod_left.F prod) a b ~> alpha_right.F (prod_right.F prod) a b ;*)
-  alpha : prod \O (ProductFunctor.F FId prod) ~> prod \O (ProductFunctor.F prod FId)
+  alpha : prod \O (ProductFunctor.F FId prod) ~> prod \O (ProductFunctor.F prod FId) \O ProductCategoryAssoc.F _ _ _
 }.
 Section scratch_pad.
 Variable C : category.
