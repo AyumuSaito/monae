@@ -205,7 +205,7 @@ Module ProductFunctor.
 (* This notion does not have a proper name in the literature.
    "Product functor" is just a tentative naming,
    which unfortunately suffers a collision to another notion:
-   the functor which maps two objects a, b \in C to their product a*b \in C 
+   the functor which maps two objects a, b \in C to their product a*b \in C
 *)
 Section def.
 Variables A1 B1 A2 B2 : category.
@@ -217,7 +217,18 @@ Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
   pairhom (F1 # homfst f) (F2 # homsnd f).
 Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
 Next Obligation.
-Admitted.
+move=> A; rewrite /actm; set h := pairhom _ _.
+apply/hom_ext => /=; rewrite boolp.funeqE.
+case: cid => i [i1 i2]; case => a /=.
+- rewrite (_ : HomPack i1 = [hom of idfun]) ?functor_id_hom //.
+  apply/hom_ext => /=.
+  rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepfst_idfun //.
+  exact/Prop_irrelevance.
+- rewrite (_ : HomPack i2 = [hom of idfun]) ?functor_id_hom //.
+  apply/hom_ext => /=.
+  rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepsnd_idfun //.
+  exact/Prop_irrelevance.
+Qed.
 Next Obligation.
 Admitted.
 End def.
