@@ -125,15 +125,47 @@ Defined.
 Definition homsnd := Eval hnf in _homsnd.
 End homfstsnd.
 Lemma homfst_idfun x : homfst (x:=x) [hom of idfun] = [hom of idfun].
-Admitted.
+Proof.
+apply/hom_ext; rewrite boolp.funeqE => x1 /=.
+case: cid => i [i1 i2] /=.
+rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepfst_idfun //.
+exact/Prop_irrelevance.
+Qed.
 Lemma homsnd_idfun x : homsnd (x:=x) [hom of idfun] = [hom of idfun].
-Admitted.
+Proof.
+apply/hom_ext; rewrite boolp.funeqE => x1 /=.
+case: cid => i [i1 i2] /=.
+rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepsnd_idfun //.
+exact/Prop_irrelevance.
+Qed.
 Lemma homfst_comp (x y z : A * B) (f : {hom x,y}) (g : {hom y,z}) :
   homfst [hom of g \o f] = [hom of homfst g \o homfst f].
-Admitted.
+Proof.
+rewrite /homfst /=.
+case: cid => //= gh [gh1 gh2].
+apply/hom_ext => /=.
+destruct g as [g g'].
+destruct f as [f f'].
+case: cid => g_ [g1 g2].
+case: cid => f_ [f1 f2] /=.
+rewrite -ProductCategory.sepfst_comp.
+congr (ProductCategory.sepfst _ _).
+exact/Prop_irrelevance.
+Qed.
 Lemma homsnd_comp (x y z : A * B) (f : {hom x,y}) (g : {hom y,z}) :
   homsnd [hom of g \o f] = [hom of homsnd g \o homsnd f].
-Admitted.
+Proof.
+rewrite /homsnd /=.
+case: cid => //= gh [gh1 gh2].
+apply/hom_ext => /=.
+destruct g as [g g'].
+destruct f as [f f'].
+case: cid => g_ [g1 g2].
+case: cid => f_ [f1 f2] /=.
+rewrite -ProductCategory.sepsnd_comp.
+congr (ProductCategory.sepsnd _ _).
+exact/Prop_irrelevance.
+Qed.
 Lemma homfstK (x y : A * B) (f : {hom x,y}) (i : El x.1) : inl (homfst f i) = f (inl i).
 Proof.
 case: f=> /= f Hf.
