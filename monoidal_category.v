@@ -288,6 +288,7 @@ Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
   pairhom (F1 # homfst f) (F2 # homsnd f).
 Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
 Next Obligation.
+move=> a.
 by rewrite /actm homfst_idfun homsnd_idfun 2!functor_id_hom pairhom_idfun.
 Qed.
 Next Obligation.
@@ -383,7 +384,8 @@ Record mixin_of (C : category) : Type := Mixin {
   lambda : papply_left.F prod I ~> FId ;
   rho : papply_right.F prod I ~> FId ;
 (*  alpha' : forall (x y z : C), El (prod (prod (x,y), z)) -> El (prod (x, prod (y, z))) ;*)
-  alpha : forall a b, alpha_left.F (prod_left.F prod) a b ~> alpha_right.F (prod_right.F prod) a b ;
+  (*alpha : forall a b, alpha_left.F (prod_left.F prod) a b ~> alpha_right.F (prod_right.F prod) a b ;*)
+  alpha : prod \O (ProductFunctor.F FId prod) ~> prod \O (ProductFunctor.F prod FId)
 }.
 Section scratch_pad.
 Variable C : category.
