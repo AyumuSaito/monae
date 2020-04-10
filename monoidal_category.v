@@ -214,8 +214,7 @@ Local Notation A := (A1 * A2)%type.
 Local Notation B := (B1 * B2)%type.
 Definition acto (x : A) : B := pair (F1 x.1) (F2 x.2).
 Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
-  pairhom (F1 # ProductCategory.homfst f) (F2 # ProductCategory.homsnd f).
-  F # 
+  pairhom (F1 # homfst f) (F2 # homsnd f).
 
 End def.
 End ProductFunctor.
