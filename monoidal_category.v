@@ -110,6 +110,7 @@ Canonical productCategory.
 
 Section prodcat_homfstsnd.
 Variables A B : category.
+Section homfstsnd.
 Let _homfst (x y : A * B) (f : {hom x,y}) : {hom x.1, y.1}.
 case:f => f.
 case/cid=> sf [] Hf _.
@@ -122,6 +123,29 @@ case/cid=> sf [] _ Hf.
 exact: (HomPack Hf).
 Defined.
 Definition homsnd := Eval hnf in _homsnd.
+End homfstsnd.
+Lemma homfst_idfun x : homfst (x:=x) [hom of idfun] = [hom of idfun].
+Admitted.
+Lemma homsnd_idfun x : homsnd (x:=x) [hom of idfun] = [hom of idfun].
+Admitted.
+Lemma homfst_comp (x y z : A * B) (f : {hom x,y}) (g : {hom y,z}) :
+  homfst [hom of g \o f] = [hom of homfst g \o homfst f].
+Admitted.
+Lemma homsnd_comp (x y z : A * B) (f : {hom x,y}) (g : {hom y,z}) :
+  homsnd [hom of g \o f] = [hom of homsnd g \o homsnd f].
+Admitted.
+Lemma homfstK (x y : A * B) (f : {hom x,y}) (i : El x.1) : inl (homfst f i) = f (inl i).
+Proof.
+case: f=> /= f Hf.
+case: (cid _)=> -[] sf1 sf2 [] Hf1 Hf2 /=.
+by case: (cid _)=> j ->.
+Qed.
+Lemma homsndK (x y : A * B) (f : {hom x,y}) (i : El x.2) : inr (homsnd f i) = f (inr i).
+Proof.
+case: f=> /= f Hf.
+case: (cid _)=> -[] sf1 sf2 [] Hf1 Hf2 /=.
+by case: (cid _)=> j ->.
+Qed.
 End prodcat_homfstsnd.
 
 Section prodCat_pairhom.
@@ -152,6 +176,53 @@ exists (conj s1 s2); split.
 Qed.
 Definition pairhom : {hom (a1, b1), (a2, b2)} := Hom.Pack _ pairhom'_in_hom.
 End prodCat_pairhom.
+
+Section pairhom_idfun.
+Variables (A B : category) (a : A) (b : B).
+Lemma pairhom_idfun : pairhom (a1:=a) (b1:=b) [hom of idfun] [hom of idfun] = [hom of idfun].
+Proof. by apply/hom_ext/funext=> -[] x /=. Qed.
+End pairhom_idfun.
+
+Section pairhom_comp.
+Variables (A B : category) (a1 a2 a3 : A) (b1 b2 b3 : B).
+Variables (fa : {hom a1,a2}) (ga : {hom a2,a3}) (fb : {hom b1,b2}) (gb : {hom b2,b3}).
+Lemma pairhom_comp : pairhom [hom of ga \o fa] [hom of gb \o fb] =
+                     [hom of pairhom ga gb \o pairhom fa fb].
+Proof. by apply /hom_ext/funext=> -[] x. Qed.
+End pairhom_comp.
+
+(* couldn't avoid the horrible eq_rect *)
+(*
+Section pairhomK'.
+Variables A B : category.
+Variables x y : A * B.
+Definition pairhomK'_eq : {hom x,y} = {hom (x.1, x.2), (y.1, y.2)}.
+refine (match x with (x1,x2)=> _ end).
+refine (match y with (y1,y2)=> _ end).
+exact erefl.
+Defined.
+Lemma pairhomK' (f : {hom x,y}) : pairhom (homfst f) (homsnd f) =
+                                 eq_rect _ id f _ pairhomK'_eq.
+Proof.
+rewrite /pairhomK'_eq.
+move: x y f=> [] x1 x2 [] y1 y2 f /=.
+apply/hom_ext/funext=> -[] i /=.
+by rewrite -homfstK.
+by rewrite -homsndK.
+Qed.
+End pairhomK'.
+*)
+Section pairhomK.
+Variables A B : category.
+Variables x1 x2 : A.
+Variables y1 y2 : B.
+Lemma pairhomK (f : {hom (x1,y1),(x2,y2)}) : pairhom (homfst f) (homsnd f) = f.
+Proof.
+apply/hom_ext/funext=> -[] i /=.
+by rewrite -homfstK.
+by rewrite -homsndK.
+Qed.
+End pairhomK.
 
 Module papply_left.
 Section def.
@@ -217,20 +288,13 @@ Definition actm (x y : A) (f : {hom x,y}) : {hom acto x, acto y} :=
   pairhom (F1 # homfst f) (F2 # homsnd f).
 Program Definition mixin_of := @Functor.Mixin _ _ acto actm _ _.
 Next Obligation.
-move=> A; rewrite /actm; set h := pairhom _ _.
-apply/hom_ext => /=; rewrite boolp.funeqE.
-case: cid => i [i1 i2]; case => a /=.
-- rewrite (_ : HomPack i1 = [hom of idfun]) ?functor_id_hom //.
-  apply/hom_ext => /=.
-  rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepfst_idfun //.
-  exact/Prop_irrelevance.
-- rewrite (_ : HomPack i2 = [hom of idfun]) ?functor_id_hom //.
-  apply/hom_ext => /=.
-  rewrite (_ : i = ProductCategory.idfun_separated _) ?ProductCategory.sepsnd_idfun //.
-  exact/Prop_irrelevance.
+by rewrite /actm homfst_idfun homsnd_idfun 2!functor_id_hom pairhom_idfun.
 Qed.
 Next Obligation.
-Admitted.
+move=> [] a1 a2 [] b1 b2 [] c1 c2 g h.
+by rewrite /actm homfst_comp homsnd_comp 2!functor_o_hom pairhom_comp.
+Qed.
+Definition F := Functor.Pack mixin_of.
 End def.
 End ProductFunctor.
 
