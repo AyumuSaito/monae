@@ -23,6 +23,7 @@ category.v
 gcm_model.v
 altprob_model.v
 monad_transformer.v
+free.v
 
 -R . monae
 
